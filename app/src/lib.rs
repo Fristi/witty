@@ -1,15 +1,15 @@
-wit_bindgen_guest_rust::generate!("../wits/markdown.wit");
-use pulldown_cmark::{html, Parser};
+wit_bindgen_guest_rust::generate!("../wits/git.wit");
 
-struct Markdown;
-// remember to export markdown.
-export_markdown!(Markdown);
+struct Gitlog;
 
-impl markdown::Markdown for Markdown {
-    fn render(input: String) -> String {
-        let parser = Parser::new(&input);
-        let mut html_output = String::new();
-        html::push_html(&mut html_output, parser);
-        return html_output;
+export_gitlog!(Gitlog);
+
+impl gitlog::Gitlog for Gitlog {
+    fn enrich(commit: gitlog::Commit) -> gitlog::Enrichment {
+        if commit.message.contains("TECH") {
+            gitlog::Enrichment::Link("http://vectos.net".to_string())
+        } else {
+            gitlog::Enrichment::None
+        }
     }
 }

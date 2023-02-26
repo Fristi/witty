@@ -1,0 +1,34 @@
+interface http {
+    record http-request {
+        url: string,
+        headers: list<tuple<string, string>>
+    }
+
+    record http-response {
+        status: u32,
+        body: list<u8>
+    }
+
+    send: func(req: http-request) -> http-response
+}
+
+interface exports {
+   record commit {
+      message: string,
+      timestamp: u64
+  }
+
+  variant enrichment {
+      link(string),
+      none
+  }
+
+  enrich: func(commit: commit) -> result<enrichment, string>
+}
+
+default world gitlog {
+
+  import http: self.http
+  export exports: self.exports
+
+}

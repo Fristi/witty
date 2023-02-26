@@ -1,15 +1,17 @@
-wit_bindgen_guest_rust::generate!("../wits/git.wit");
+wit_bindgen::generate!("git" in "../wit/git.wit");
 
-struct Gitlog;
+struct MyGitlog;
 
-export_gitlog!(Gitlog);
-
-impl gitlog::Gitlog for Gitlog {
-    fn enrich(commit: gitlog::Commit) -> gitlog::Enrichment {
+impl exports::Exports for MyGitlog {
+    fn enrich(commit: exports::Commit) -> Result<exports::Enrichment,String> {
         if commit.message.contains("TECH") {
-            gitlog::Enrichment::Link("http://vectos.net".to_string())
+            return Ok(exports::Enrichment::Link("http://vectos.net".to_string()))
+        } else if commit.message.contains("IP") {
+            todo!()
         } else {
-            gitlog::Enrichment::None
+            return Ok(exports::Enrichment::None)
         }
     }
 }
+
+export_gitlog!(MyGitlog);

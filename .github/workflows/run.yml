@@ -36,14 +36,3 @@ jobs:
       - name: Use component
         run: |
           cargo r -p runner
-
-      - name: Install dependencies
-        run: |
-          sudo apt-get install python3 python3-pip
-          pip3 install wasmtime
-
-      - name: Python host
-        run: |
-          python -m wasmtime.bindgen ./target/component.wasm --out-dir python/markdown/
-          cd python 
-          python3 main.py

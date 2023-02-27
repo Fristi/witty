@@ -10,3 +10,4 @@ wit-bindgen = "0.3.0"
 wit-component = "0.7.1"
 wasmtime = { version = "6.0.0", features = ["component-model"] }
 anyhow = "1.0.69"
+reqwest = { version = "0.11.14", features = ["blocking"] }

@@ -5,7 +5,7 @@ interface http {
     }
 
     record http-response {
-        status: u32,
+        status: u16,
         body: list<u8>
     }
 

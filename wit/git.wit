@@ -9,7 +9,14 @@ interface http {
         body: list<u8>
     }
 
-    send: func(req: http-request) -> http-response
+    enum http-error {
+        network,
+        timeout,
+        invalid-url,
+        invalid-request
+    }
+
+    send: func(req: http-request) -> result<http-response, http-error>
 }
 
 interface config {
@@ -32,7 +39,9 @@ interface log {
     log: func(level: level, msg: string) -> ()
 }
 
-interface exports {
+interface data {
+   use self.http.{http-error}
+
    record commit {
       message: string,
       timestamp: u64
@@ -43,7 +52,12 @@ interface exports {
       none
   }
 
-  enrich: func(commit: commit) -> result<enrichment, string>
+  variant enrichment-error {
+    http-error(http-error),
+    json-error(string)
+  }
+
+  enrich: func(commit: commit) -> result<enrichment, enrichment-error>
 }
 
 default world gitlog {
@@ -53,6 +67,6 @@ default world gitlog {
   import log: self.log
   import cache: self.cache
 
-  export exports: self.exports
+  export data: self.data
 
 }

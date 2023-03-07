@@ -1,13 +1,12 @@
 use std::time::Duration;
 
-use async_trait::async_trait;
 use crate::http;
 
 pub struct ReqwestHttp {
     pub timeout: Duration
 }
 
-#[async_trait]
+#[async_trait::async_trait]
 impl http::Http for ReqwestHttp {
     async fn send(&mut self, req:http::HttpRequest) -> anyhow::Result<Result<http::HttpResponse, http::HttpError>> {
 

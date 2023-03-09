@@ -1,5 +1,5 @@
 use std::time::Duration;
-use crate::reqwest::ReqwestHttp;
+use crate::reqwest_http::ReqwestHttp;
 
 pub struct Context {
     http: ReqwestHttp

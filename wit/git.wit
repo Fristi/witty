@@ -64,7 +64,7 @@ default world gitlog {
 
   import http: self.http
   import config: self.config
-  import log: self.log
+  import log: pkg.log
   import cache: self.cache
 
   export data: self.data

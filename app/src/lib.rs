@@ -1,4 +1,4 @@
-wit_bindgen::generate!("git" in "../wit/git.wit");
+wit_bindgen::generate!("git" in "../wit");
 
 use serde::Deserialize;
 use data::*;

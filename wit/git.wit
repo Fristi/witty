@@ -1,46 +1,5 @@
-interface http {
-    record http-request {
-        url: string,
-        headers: list<tuple<string, string>>
-    }
-
-    record http-response {
-        status: u16,
-        body: list<u8>
-    }
-
-    enum http-error {
-        network,
-        timeout,
-        invalid-url,
-        invalid-request
-    }
-
-    send: func(req: http-request) -> result<http-response, http-error>
-}
-
-interface config {
-    get: func(key: string) -> option<string>
-}
-
-interface cache {
-    set: func(key: string, value: list<u8>) -> ()
-    get: func(key: string) -> option<list<u8>>
-}
-
-interface log {
-    enum level {
-        debug,
-        info,
-        warn,
-        error
-    }
-
-    log: func(level: level, msg: string) -> ()
-}
-
 interface data {
-   use self.http.{http-error}
+   use pkg.http.{http-error}
 
    record commit {
       message: string,
@@ -62,10 +21,10 @@ interface data {
 
 default world gitlog {
 
-  import http: self.http
-  import config: self.config
+  import http: pkg.http
+  import config: pkg.config
   import log: pkg.log
-  import cache: self.cache
+  import cache: pkg.cache
 
   export data: self.data
 

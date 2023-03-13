@@ -1,0 +1,8 @@
+default interface commits {
+   record commit {
+      message: string,
+      timestamp: u64
+  }
+
+  get: func(org: string, repo: string, from-commit: string, to-commit: string, page: u32) -> result<list<commit>>
+}

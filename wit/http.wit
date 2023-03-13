@@ -1,0 +1,20 @@
+default interface http {
+    record http-request {
+        url: string,
+        headers: list<tuple<string, string>>
+    }
+
+    record http-response {
+        status: u16,
+        body: list<u8>
+    }
+
+    enum http-error {
+        network,
+        timeout,
+        invalid-url,
+        invalid-request
+    }
+
+    send: func(req: http-request) -> result<http-response, http-error>
+}

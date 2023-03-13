@@ -1,0 +1,3 @@
+default interface config {
+    get: func(key: string) -> option<string>
+}

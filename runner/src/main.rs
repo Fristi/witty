@@ -1,13 +1,16 @@
-wasmtime::component::bindgen!({ world: "git", path: "../wit/git.wit", async: true});
+wasmtime::component::bindgen!({ world: "plugin-enricher", path: "../wit", async: true});
 
-use std::fmt::{Display, Formatter};
-use std::time::Duration;
 use anyhow::*;
+use std::time::Duration;
 
-use wasmtime::{component::{Component, Linker, InstancePre}, Config, Engine, Store};
-use wit_component::ComponentEncoder;
+use commits::{CommitParam as Commit};
+use enricher::Enrichment;
 use context::Context;
-use crate::data::{Commit, Enrichment};
+use wasmtime::{
+    component::{Component, InstancePre, Linker},
+    Config, Engine, Store,
+};
+use wit_component::ComponentEncoder;
 
 mod context;
 mod reqwest_http;
@@ -15,14 +18,14 @@ mod reqwest_http;
 #[derive(Clone)]
 pub struct Worker {
     engine: Engine,
-    pre_instance: InstancePre<Context>
+    pre_instance: InstancePre<Context>,
 }
 
-
 impl Worker {
-
     async fn from_url(url: &str) -> Result<Worker> {
-        let client = reqwest::Client::builder().timeout(Duration::from_secs(10)).build()?;
+        let client = reqwest::Client::builder()
+            .timeout(Duration::from_secs(10))
+            .build()?;
         let resp = client.get(url).send().await?;
         let bytes = resp.bytes().await?;
 
@@ -46,10 +49,15 @@ impl Worker {
         let component = Component::from_binary(&engine, &encoded_component)?;
 
         http::add_to_linker(&mut linker, Context::http)?;
+        config::add_to_linker(&mut linker, Context::config)?;
+        log::add_to_linker(&mut linker, Context::log)?;
 
         let pre_instance = linker.instantiate_pre(&component)?;
 
-        Ok(Worker { engine, pre_instance })
+        Ok(Worker {
+            engine,
+            pre_instance,
+        })
     }
 
     fn from_file(path: &str) -> Result<Worker> {
@@ -57,43 +65,36 @@ impl Worker {
         Worker::from_bytes(bytes.as_slice())
     }
 
-    pub async fn work(&self, commit: Commit<'_>) -> Result<Enrichment> {
+    pub async fn work(&self, commit: Commit<'_>) -> Result<Vec<Enrichment>> {
         let mut store: Store<Context> = Store::new(&self.engine, Context::new());
-        let (gitlog,_) = Gitlog::instantiate_pre(&mut store, &self.pre_instance).await?;
-        let res = gitlog.data.call_enrich(&mut store, commit).await??;
+        let (gitlog, _) = PluginEnricher::instantiate_pre(&mut store, &self.pre_instance).await?;
+        let res = gitlog.enricher.call_enrich(&mut store, commit).await?.unwrap();
         Ok(res)
     }
 }
 
-
 #[tokio::main]
 async fn main() -> Result<()> {
-
-    let worker = Worker::from_file("./target/wasm32-unknown-unknown/release/app.wasm")?;
+    let worker = Worker::from_file("/Users/markie/Projects/component-model-demo/target/wasm32-unknown-unknown/release/diffmrs_plugin_enrichment_jira.wasm")?;
     let mut handles = Vec::new();
 
-    for _ in 1..10 {
+    for _ in 1..2 {
         handles.push(tokio::spawn({
             let w = worker.clone();
             async move {
-            w.work(Commit { message: "IP: test", timestamp: 0 }).await
-        }}));
+                w.work(Commit {
+                    message: "SPA-1667: test",
+                    timestamp: 0,
+                })
+                .await
+            }
+        }));
     }
 
     for h in handles {
         let res = h.await?.unwrap();
-        println!("Got enrichment: {}", res);
+        dbg!("Got enrichment: {}", res);
     }
-
 
     Ok(())
-}
-
-impl Display for data::Enrichment {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        match self {
-            data::Enrichment::Link(link) => write!(f, "Link({})", link),
-            data::Enrichment::None => write!(f, "None")
-        }
-    }
 }

@@ -1,5 +1,5 @@
 [package]
-name = "diffmrs-plugin-enrichment-jira"
+name = "diffmrs-plugin-enrichment-gitflow"
 version = "0.1.0"
 edition = "2021"
 

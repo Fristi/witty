@@ -1,16 +1,24 @@
 interface enricher {
     use pkg.commits.{commit}
+    use pkg.config.{config-descriptor}
     use pkg.error.{plugin-error}
 
+    record webref {
+        label: string,
+        link: string
+    }
+
     variant enrichment {
-        link(string),
+        link(webref),
+        tag(string),
         none
     }
 
-    enrich: func(commit: commit) -> result<enrichment, plugin-error>
+    config-discriptors: func() -> list<config-descriptor>
+    enrich: func(c: commit) -> result<list<enrichment>, plugin-error>
 }
 
-default world commit-enricher {
+default world plugin-enricher {
   import http: pkg.http
   import config: pkg.config
   import log: pkg.log

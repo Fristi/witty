@@ -1,7 +1,16 @@
-interface hello {
-   hello: func(name: string) -> string
-}
+default interface error {
+    enum http-error {
+        network,
+        timeout,
+        invalid-url,
+        invalid-request,
+        invalid-response
+    }
 
-default world component {
-   export hello: self.hello
+    variant plugin-error {
+        http(http-error),
+        config-key-not-found(string),
+        json(string),
+        unexpected(string)
+    }
 }

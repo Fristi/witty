@@ -1,0 +1,20 @@
+interface enricher {
+    use pkg.commits.{commit}
+    use pkg.error.{plugin-error}
+
+    variant enrichment {
+        link(string),
+        none
+    }
+
+    enrich: func(commit: commit) -> result<enrichment, plugin-error>
+}
+
+default world commit-enricher {
+  import http: pkg.http
+  import config: pkg.config
+  import log: pkg.log
+  import cache: pkg.cache
+
+  export enricher: self.enricher
+}

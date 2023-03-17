@@ -1,15 +1,18 @@
 use std::time::Duration;
 
 use crate::http;
+use crate::error::{HttpError, PluginError};
 
 pub struct ReqwestHttp {
-    pub timeout: Duration
+    pub timeout: Duration,
 }
 
 #[async_trait::async_trait]
-impl http::Http for ReqwestHttp {
-    async fn send(&mut self, req:http::HttpRequest) -> anyhow::Result<Result<http::HttpResponse, http::HttpError>> {
-
+impl http::Host for ReqwestHttp {
+    async fn send(
+        &mut self,
+        req: http::HttpRequest,
+    ) -> anyhow::Result<Result<http::HttpResponse, PluginError>> {
         let client = reqwest::Client::builder().timeout(self.timeout).build()?;
 
         let mut builder = client.get(req.url);
@@ -22,19 +25,17 @@ impl http::Http for ReqwestHttp {
         let status = resp.status().as_u16();
         let body = resp.bytes().await?.to_vec();
 
-
-        Ok(Ok(http::HttpResponse{ status, body }))
+        Ok(Ok(http::HttpResponse { status, body }))
     }
 }
 
-impl From<reqwest::Error> for http::HttpError {
+impl From<reqwest::Error> for PluginError {
     fn from(value: reqwest::Error) -> Self {
         if value.is_connect() || value.is_status() {
-            return http::HttpError::Network;
+            return PluginError::Http(HttpError::Network);
         } else if value.is_timeout() {
-            return http::HttpError::Timeout;
+            return PluginError::Http(HttpError::Timeout);
         }
-
-        return http::HttpError::InvalidRequest;
+        return PluginError::Http(HttpError::InvalidRequest);
     }
 }

@@ -1,6 +1,7 @@
 [workspace]
 members = [
-    "app",
+    "plugins/enrichment/jira",
+    "plugins/enrichment/gitflow",
     "runner",
     "registry"
 ]

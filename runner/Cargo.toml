@@ -7,7 +7,7 @@ edition = "2021"
 
 [dependencies]
 wit-component = "0.7.1"
-wasmtime = { version = "6.0.1", features = ["component-model"] }
+wasmtime = { git = "https://github.com/bytecodealliance/wasmtime.git", features = ["component-model"] }
 anyhow = "1.0.69"
 async-trait = "0.1.66"
 tokio = { version = "1", features = ["full"] }

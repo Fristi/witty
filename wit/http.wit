@@ -1,4 +1,6 @@
 default interface http {
+    use pkg.error.{plugin-error}
+
     record http-request {
         url: string,
         headers: list<tuple<string, string>>
@@ -9,12 +11,5 @@ default interface http {
         body: list<u8>
     }
 
-    enum http-error {
-        network,
-        timeout,
-        invalid-url,
-        invalid-request
-    }
-
-    send: func(req: http-request) -> result<http-response, http-error>
+    send: func(req: http-request) -> result<http-response, plugin-error>
 }

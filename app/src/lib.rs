@@ -1,8 +1,11 @@
-wit_bindgen::generate!("git" in "../wit");
+wit_bindgen::generate!("plugin-enricher" in "../wit");
 
 use serde::Deserialize;
-use data::*;
-use http::*;
+use serde::de::Error;
+use http::{send, HttpRequest};
+use serde_json_wasm::from_slice;
+use enricher::{PluginError, Commit, Enricher, Enrichment};
+
 
 struct MyGitlog;
 
@@ -11,8 +14,8 @@ struct IpData {
     ip: String
 }
 
-impl Data for MyGitlog {
-    fn enrich(commit: Commit) -> Result<Enrichment, EnrichmentError> {
+impl Enricher for MyGitlog {
+    fn enrich(commit: Commit) -> Result<Enrichment, PluginError> {
         if commit.message.contains("TECH") {
             return Ok(Enrichment::Link("http://vectos.net".to_string()))
         } else if commit.message.contains("IP") {
@@ -20,7 +23,7 @@ impl Data for MyGitlog {
             let resp = send( HttpRequest { url: "https://api.ipify.org?format=json", headers: &headers })?;
 
             if resp.status == 200 {
-                let ip: IpData = serde_json::from_slice(resp.body.as_slice())?;
+                let ip: IpData = from_slice(resp.body.as_slice())?;
                 return Ok(Enrichment::Link(ip.ip));
             } else {
                 return Ok(Enrichment::None)
@@ -31,16 +34,10 @@ impl Data for MyGitlog {
     }
 }
 
-impl From<http::HttpError> for EnrichmentError {
-    fn from(value: http::HttpError) -> Self {
-        EnrichmentError::HttpError(value)
+impl <T> From<T> for PluginError where T : Error {
+    fn from(value: T) -> Self {
+        PluginError::JsonError(value.to_string())
     }
 }
 
-impl From<serde_json::Error> for EnrichmentError {
-    fn from(value: serde_json::Error) -> Self {
-        EnrichmentError::JsonError(value.to_string())
-    }
-}
-
-export_gitlog!(MyGitlog);
+export_plugin_enricher!(MyGitlog);

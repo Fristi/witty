@@ -1,3 +1,19 @@
 default interface config {
-    get: func(key: string) -> option<string>
+
+    enum config-kind {
+        str,
+        secret,
+        unsignedint,
+        str-array
+    }
+
+    record config-descriptor {
+        key: string,
+        kind: config-kind
+    }
+
+    str: func(key: string) -> option<string>
+    secret: func(key: string) -> option<string>
+    unsignedint: func(key: string) -> option<u32>
+    str-array: func(key: string) -> option<list<string>>
 }

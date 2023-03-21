@@ -700,6 +700,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "diffmrs-plugin-container-runtime-marathon"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde-json-wasm",
+ "wit-bindgen",
+]
+
+[[package]]
 name = "diffmrs-plugin-enrichment-gitflow"
 version = "0.1.0"
 dependencies = [

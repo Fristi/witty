@@ -1,7 +1,20 @@
-interface hello {
-   hello: func(name: string) -> string
+interface container-runtime {
+    use pkg.config.{config-descriptor}
+    use pkg.error.{plugin-error}
+
+    record container {
+        image: string
+    }
+
+    config-discriptors: func() -> list<config-descriptor>
+    containers: func() -> result<list<container>, plugin-error>
 }
 
-default world component {
-   export hello: self.hello
+default world plugin-container-runtime {
+  import http: pkg.http
+  import config: pkg.config
+  import log: pkg.log
+  import cache: pkg.cache
+
+  export container-runtime: self.container-runtime
 }

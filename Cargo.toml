@@ -1,5 +1,6 @@
 [workspace]
 members = [
+    "plugins/container-runtime/marathon",
     "plugins/enrichment/jira",
     "plugins/enrichment/gitflow",
     "runner",

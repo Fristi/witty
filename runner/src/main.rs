@@ -1,10 +1,12 @@
-wasmtime::component::bindgen!({ world: "plugin-enricher", path: "../wit", async: true});
+// wasmtime::component::bindgen!({ world: "plugin-enricher", path: "../wit", async: true});
+wasmtime::component::bindgen!({ world: "plugin-container-runtime", path: "../wit", async: true});
 
 use anyhow::*;
 use std::time::Duration;
 
-use commits::{CommitParam as Commit};
-use enricher::Enrichment;
+// use commits::{CommitParam as Commit};
+// use enricher::Enrichment;
+use container_runtime::{Container, ContainerRuntime};
 use context::Context;
 use wasmtime::{
     component::{Component, InstancePre, Linker},
@@ -65,36 +67,47 @@ impl Worker {
         Worker::from_bytes(bytes.as_slice())
     }
 
-    pub async fn work(&self, commit: Commit<'_>) -> Result<Vec<Enrichment>> {
+    // pub async fn enrich(&self, commit: Commit<'_>) -> Result<Vec<Enrichment>> {
+    //     let mut store: Store<Context> = Store::new(&self.engine, Context::new());
+    //     let (gitlog, _) = PluginEnricher::instantiate_pre(&mut store, &self.pre_instance).await?;
+    //     let res = gitlog.enricher.call_enrich(&mut store, commit).await?.unwrap();
+    //     Ok(res)
+    // }
+
+    pub async fn containers(&self) -> Result<Vec<Container>> {
         let mut store: Store<Context> = Store::new(&self.engine, Context::new());
-        let (gitlog, _) = PluginEnricher::instantiate_pre(&mut store, &self.pre_instance).await?;
-        let res = gitlog.enricher.call_enrich(&mut store, commit).await?.unwrap();
+        let (runtime, _) = PluginContainerRuntime::instantiate_pre(&mut store, &self.pre_instance).await?;
+        let res = runtime.container_runtime.call_containers(&mut store).await?.unwrap();
         Ok(res)
     }
 }
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    let worker = Worker::from_file("/Users/markie/Projects/component-model-demo/target/wasm32-unknown-unknown/release/diffmrs_plugin_enrichment_jira.wasm")?;
-    let mut handles = Vec::new();
+    let w = Worker::from_file("/Users/markie/Projects/component-model-demo/target/wasm32-unknown-unknown/release/diffmrs_plugin_container_runtime_marathon.wasm")?;
+    // let mut handles = Vec::new();
+    //
+    // for _ in 1..2 {
+    //     handles.push(tokio::spawn({
+    //         let w = worker.clone();
+    //         async move {
+    //             w.enrich(Commit {
+    //                 message: "SPA-1667: test",
+    //                 timestamp: 0,
+    //             })
+    //             .await
+    //         }
+    //     }));
+    // }
+    //
+    // for h in handles {
+    //     let res = h.await?.unwrap();
+    //     dbg!("Got enrichment: {}", res);
+    // }
 
-    for _ in 1..2 {
-        handles.push(tokio::spawn({
-            let w = worker.clone();
-            async move {
-                w.work(Commit {
-                    message: "SPA-1667: test",
-                    timestamp: 0,
-                })
-                .await
-            }
-        }));
-    }
+    let containers = w.containers().await?;
 
-    for h in handles {
-        let res = h.await?.unwrap();
-        dbg!("Got enrichment: {}", res);
-    }
+    dbg!(containers);
 
     Ok(())
 }

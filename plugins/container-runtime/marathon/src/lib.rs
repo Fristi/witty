@@ -17,8 +17,20 @@ struct MarathonApps {
 }
 
 #[derive(Deserialize)]
+struct MarathonContainerDocker {
+    image: String
+}
+
+#[derive(Deserialize)]
+struct MarathonContainer {
+    #[serde(rename = "type")]
+    type_name: String,
+    docker: MarathonContainerDocker
+}
+
+#[derive(Deserialize)]
 struct MarathonApp {
-    container: Option<String>
+    container: Option<MarathonContainer>
 }
 
 impl MarathonContainerRuntime {
@@ -27,6 +39,19 @@ impl MarathonContainerRuntime {
 }
 
 impl ContainerRuntime for MarathonContainerRuntime {
+    fn config_discriptors() -> Vec<ConfigDescriptor> {
+        vec![
+            ConfigDescriptor {
+                key: MarathonContainerRuntime::FIELD_URL.to_string(),
+                kind: ConfigKind::Str,
+            },
+            ConfigDescriptor {
+                key: MarathonContainerRuntime::FIELD_KEY.to_string(),
+                kind: ConfigKind::Secret,
+            }
+        ]
+    }
+
     fn containers() -> Result<Vec<Container>, PluginError> {
         let url = str(MarathonContainerRuntime::FIELD_URL).ok_or(PluginError::ConfigKeyNotFound(MarathonContainerRuntime::FIELD_URL.to_string()))?;
         let auth = secret(MarathonContainerRuntime::FIELD_KEY).ok_or(PluginError::ConfigKeyNotFound(MarathonContainerRuntime::FIELD_KEY.to_string()))?;
@@ -45,26 +70,14 @@ impl ContainerRuntime for MarathonContainerRuntime {
             let containers = res.apps
                 .into_iter()
                 .filter_map(|x| x.container)
-                .map(|image| Container { image })
+                .filter(|x| x.type_name == "DOCKER")
+                .map(|c| Container { image: c.docker.image })
                 .collect();
 
             return Ok(containers);
         } else {
             return Err(PluginError::Http(HttpError::InvalidResponse))
         }
-    }
-
-    fn config_discriptors() -> Vec<ConfigDescriptor> {
-        vec![
-            ConfigDescriptor {
-                key: MarathonContainerRuntime::FIELD_URL.to_string(),
-                kind: ConfigKind::Str,
-            },
-            ConfigDescriptor {
-                key: MarathonContainerRuntime::FIELD_KEY.to_string(),
-                kind: ConfigKind::Secret,
-            }
-        ]
     }
 }
 
